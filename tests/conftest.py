@@ -13,3 +13,8 @@ import tempfile
 
 _tmp_dir = tempfile.mkdtemp(prefix="checkin_tests_")
 os.environ["CHECKIN_DB_URL"] = f"sqlite:///{os.path.join(_tmp_dir, 'test.db')}"
+
+# Fixed login for the dashboard during tests. Set here (before the app is
+# imported) so the auth guard has known credentials to check against.
+os.environ["DASHBOARD_USERNAME"] = "family"
+os.environ["DASHBOARD_PASSWORD"] = "test-password"

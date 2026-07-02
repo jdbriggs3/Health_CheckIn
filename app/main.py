@@ -13,11 +13,12 @@ Endpoints:
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Form, Request
+from fastapi import Depends, FastAPI, Form, Request
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from app import config
+from app.auth import require_login
 from app.dashboard import get_overview
 from app.database import SessionLocal, init_db
 from app.flow import check_missing_replies, handle_reply, start_checkins
@@ -55,9 +56,10 @@ def _seed_recipients() -> None:
         session.commit()
 
 
-@app.get("/")
+@app.get("/", dependencies=[Depends(require_login)])
 def dashboard(request: Request):
-    """The family dashboard: recent history and today's status, as a web page."""
+    """The family dashboard: recent history and today's status, as a web page.
+    Requires the family login (holds private health observations)."""
     with SessionLocal() as session:
         overview = get_overview(session)
     # Jinja2Templates needs the request object; the rest is our data.
@@ -67,7 +69,7 @@ def dashboard(request: Request):
     )
 
 
-@app.get("/partials/today")
+@app.get("/partials/today", dependencies=[Depends(require_login)])
 def today_panel(request: Request):
     """Just the 'today at a glance' panel — htmx fetches this to auto-refresh."""
     with SessionLocal() as session:
@@ -77,7 +79,7 @@ def today_panel(request: Request):
     )
 
 
-@app.get("/api/status")
+@app.get("/api/status", dependencies=[Depends(require_login)])
 def api_status():
     """The raw data as JSON. Handy for testing and for any future tooling."""
     with SessionLocal() as session:

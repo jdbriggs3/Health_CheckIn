@@ -22,11 +22,13 @@ TEST_PHONE = "+15550000000"  # matches the seeded recipient in app/config.py
 
 @pytest.fixture
 def client(monkeypatch):
-    """A test client with outgoing texts captured instead of printed."""
+    """A test client with outgoing texts captured instead of printed. It logs in
+    by default (auth set) so the protected dashboard endpoints are reachable."""
     sent = []
     monkeypatch.setattr(flow, "send_sms", lambda to, body: sent.append((to, body)))
     # The 'with' block triggers the app's startup (create tables, seed people).
     with TestClient(app) as c:
+        c.auth = ("family", "test-password")  # matches conftest.py
         c.sent = sent  # stash captured messages on the client for convenience
         yield c
 
@@ -75,3 +77,20 @@ def test_webhook_missing_fields_is_rejected(client):
     """Leaving out Body should be a clean 422 error, not a crash."""
     resp = client.post("/sms-webhook", data={"From": TEST_PHONE})
     assert resp.status_code == 422
+
+
+def test_dashboard_requires_login(client):
+    """The private pages must reject visitors who don't log in (401), and the
+    webhook must stay OPEN so Twilio can still deliver replies."""
+    # No credentials -> the protected pages are blocked.
+    no_login = TestClient(app)
+    assert no_login.get("/").status_code == 401
+    assert no_login.get("/partials/today").status_code == 401
+    assert no_login.get("/api/status").status_code == 401
+
+    # Wrong password is also blocked.
+    no_login.auth = ("family", "wrong-password")
+    assert no_login.get("/").status_code == 401
+
+    # But the webhook needs no login (Twilio can't log in).
+    assert no_login.post("/sms-webhook", data={"From": TEST_PHONE, "Body": "3"}).status_code == 200
