@@ -1,1 +1,9 @@
 .idea/
+checkins.db
+server.log
+.venv/
+
+# Python's auto-generated caches (safe to ignore, regenerated automatically)
+__pycache__/
+*.pyc
+.pytest_cache/
