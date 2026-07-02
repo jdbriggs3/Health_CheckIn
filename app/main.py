@@ -31,7 +31,7 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """Runs once when the server boots (before 'yield') and, if we needed it,
     on shutdown (after 'yield'). This is FastAPI's current way to do startup
     work — here: create tables and seed recipients."""
@@ -107,13 +107,16 @@ def send_checkin():
 
 
 @app.post("/sms-webhook")
-def sms_webhook(From: str = Form(...), Body: str = Form(...)):
+def sms_webhook(
+    from_phone: str = Form(..., alias="From"),
+    body: str = Form(..., alias="Body"),
+):
     """
     Receive an incoming text. Twilio sends form fields named 'From' and 'Body',
-    so we match that shape now — real texts will 'just work' later.
+    so we match that shape via the field aliases — real texts will 'just work' later.
     """
     with SessionLocal() as session:
-        note = handle_reply(session, from_phone=From, body=Body)
+        note = handle_reply(session, from_phone=from_phone, body=body)
     return JSONResponse({"result": note})
 
 

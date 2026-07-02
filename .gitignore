@@ -3,6 +3,9 @@ checkins.db
 server.log
 .venv/
 
+# Secrets — real Twilio keys live here and must NEVER be committed to git.
+.env
+
 # Python's auto-generated caches (safe to ignore, regenerated automatically)
 __pycache__/
 *.pyc
