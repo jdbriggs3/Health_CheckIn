@@ -31,10 +31,26 @@ def client(monkeypatch):
         yield c
 
 
-def test_status_endpoint_responds(client):
-    resp = client.get("/")
+def test_api_status_responds(client):
+    resp = client.get("/api/status")
     assert resp.status_code == 200
     assert "Test (me)" in resp.json()["recipients"]
+
+
+def test_dashboard_page_renders(client):
+    """The family dashboard '/' returns an HTML page mentioning the recipient."""
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+    assert "Family Check-In" in resp.text
+    assert "Test (me)" in resp.text
+
+
+def test_today_partial_renders(client):
+    """The htmx auto-refresh endpoint returns an HTML fragment."""
+    resp = client.get("/partials/today")
+    assert resp.status_code == 200
+    assert "Test (me)" in resp.text
 
 
 def test_webhook_uses_twilio_field_names(client):
@@ -48,8 +64,8 @@ def test_webhook_uses_twilio_field_names(client):
     r3 = client.post("/sms-webhook", data={"From": TEST_PHONE, "Body": "yes"})
     assert "COMPLETE" in r3.json()["result"]
 
-    # The status endpoint now shows a completed check-in with our answers.
-    checkins = client.get("/").json()["checkins"]
+    # The JSON status endpoint now shows a completed check-in with our answers.
+    checkins = client.get("/api/status").json()["checkins"]
     assert len(checkins) == 1
     assert checkins[0]["feeling"] == 3
     assert checkins[0]["status"] == "complete"

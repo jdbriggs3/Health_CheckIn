@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Family Check-In{% endblock %}</title>
+
+  <!-- TailwindCSS via CDN: styling with no build step (great for now; for a
+       real deployment you'd usually switch to a compiled Tailwind file). -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- htmx via CDN: lets small parts of the page update on their own without
+       us writing JavaScript. We use it to auto-refresh the "today" panel. -->
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-2xl font-semibold text-slate-900">Family Check-In</h1>
+      <p class="text-sm text-slate-500">Staying connected, one good morning at a time.</p>
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <footer class="mt-12 pt-6 border-t border-slate-200 text-xs text-slate-400 leading-relaxed">
+      This page helps the family stay in touch and notice trends together.
+      It is not a medical device and does not diagnose, monitor for emergencies,
+      or give medical advice.
+    </footer>
+  </div>
+</body>
+</html>

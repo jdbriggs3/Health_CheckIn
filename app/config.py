@@ -30,7 +30,7 @@ QUESTIONS = [
         "type": "scale_1_5",
         "prompt": (
             "Good morning! \U0001F31E How are you feeling today, "
-            "on a scale of 1 to 5? (1 = pretty rough, 5 = great)"
+            "on a scale of 1 to 5? (5 = great, 1 = rough)"
         ),
     },
     {

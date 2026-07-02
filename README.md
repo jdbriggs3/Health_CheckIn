@@ -25,8 +25,9 @@ no phones involved.
 - ✅ Reads replies (understands casual wording like "feeling like a 4" or "yep")
 - ✅ Saves each day's answers to a database
 - ✅ A basic "no reply yet" family alert
+- ✅ A **family dashboard** web page (recent history + "today at a glance")
 - ✅ Automated tests (`pytest`)
-- ⏳ Not yet: real Twilio texts, always-on hosting, the family dashboard
+- ⏳ Not yet: real Twilio texts, always-on hosting, alert timing rules
 
 ---
 
@@ -39,7 +40,11 @@ app/
   database.py   # the SQLite database connection (data lives in checkins.db)
   sms.py        # send_sms(): fake/console now, swap in Twilio later
   flow.py       # the guided-sequence brain: ask -> read reply -> next -> alerts
+  dashboard.py  # gathers the history/summary the dashboard page shows
   main.py       # the FastAPI web server and its endpoints
+templates/      # the dashboard web page (Jinja2 + Tailwind + htmx)
+scripts/
+  seed_sample_data.py     # fill the local db with sample data to preview the dashboard
 tests/          # automated tests (see "Running the tests" below)
 docs/
   changing-questions.md   # how to reword / add / remove a question
@@ -49,7 +54,9 @@ docs/
 
 | Method & path | What it does |
 |---|---|
-| `GET /` | A quick status view of today's check-ins |
+| `GET /` | The **family dashboard** web page |
+| `GET /partials/today` | Just the "today at a glance" panel (htmx auto-refresh) |
+| `GET /api/status` | The raw data as JSON (handy for testing/debugging) |
 | `POST /send-checkin` | Send this morning's first question to everyone |
 | `POST /sms-webhook` | Receive a reply (Twilio will call this for real later) |
 | `POST /check-alerts` | Text the family about anyone who hasn't finished |
@@ -71,9 +78,16 @@ python3 -m venv .venv
 
 Then, in Safari:
 
+- Open **http://127.0.0.1:8000/** to see the **family dashboard**.
 - Open **http://127.0.0.1:8000/docs** for a clickable control panel — press
   "Try it out" → "Execute" on any endpoint (no command line needed).
-- Open **http://127.0.0.1:8000/** to see the current data.
+
+To preview the dashboard with a couple of weeks of realistic-looking history,
+load some sample data first (safe — it only touches your local `checkins.db`):
+
+```bash
+.venv/bin/python scripts/seed_sample_data.py
+```
 
 Because texts are "fake" for now, sent messages **print in the terminal** where
 the server is running. The data is stored in a file called `checkins.db` in the
@@ -107,9 +121,15 @@ you can also click the green ▶ arrows next to each test.
 
 ## What's next
 
-1. **The family dashboard** — a web page showing history and trends.
+1. ✅ ~~The family dashboard~~ — done (recent history + "today at a glance").
 2. **Real Twilio + hosting** — send actual texts from an always-on, low-cost host.
 3. **Alert timing rules** — e.g. ask at 9am, alert the family if not done by 11am.
+
+Done:
+
+- ✅ **Feeling-trend graphs** on the dashboard — small inline SVG sparklines
+  (no libraries), one per person. A richer interactive version (Chart.js via
+  CDN) is a possible future upgrade.
 
 The plan is to test real texts with **your own phone first**, and only add your
 dad's and his wife's numbers once that's solid.

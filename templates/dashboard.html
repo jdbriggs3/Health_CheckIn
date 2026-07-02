@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- TODAY AT A GLANCE ------------------------------------------------------->
+<section class="mb-10">
+  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">
+    Today at a glance
+  </h2>
+
+  <!-- htmx: every 30 seconds, quietly re-fetch /partials/today and swap the
+       contents of this box. hx-target/hx-swap say "replace what's inside me". -->
+  <div hx-get="/partials/today"
+       hx-trigger="every 30s"
+       hx-target="this"
+       hx-swap="innerHTML">
+    {% include "_today.html" %}
+  </div>
+</section>
+
+<!-- HISTORY (one card per person) ------------------------------------------->
+<section>
+  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">
+    Last {{ days }} days
+  </h2>
+
+  {% for person in people %}
+  <div class="mb-6 rounded-lg border border-slate-200 bg-white p-4">
+    <div class="flex items-baseline justify-between mb-3">
+      <h3 class="text-lg font-medium text-slate-900">{{ person.name }}</h3>
+      <span class="text-sm text-slate-500">
+        {% if person.avg_feeling is not none %}
+          avg feeling {{ person.avg_feeling }}/5
+        {% else %}
+          no numbers yet
+        {% endif %}
+        {% if person.missed_days %} · {{ person.missed_days }} day(s) without a check-in{% endif %}
+      </span>
+    </div>
+
+    {# Feeling trend graph (a tiny inline SVG "sparkline"). #}
+    {% set spark = person.sparkline %}
+    {% if spark.dots %}
+    <div class="mb-4">
+      <div class="text-xs text-slate-400 mb-1">Feeling trend (last {{ days }} days)</div>
+      <svg viewBox="0 0 {{ spark.width }} {{ spark.height }}"
+           width="{{ spark.width }}" height="{{ spark.height }}"
+           class="overflow-visible" role="img"
+           aria-label="Feeling scores over the last {{ days }} days, on a fixed scale of 1 to 5">
+        <!-- fixed 1-5 axis: guide lines at 5 (top) and 1 (bottom), with labels -->
+        <line x1="{{ spark.axis_x1 }}" y1="{{ spark.top_y }}" x2="{{ spark.axis_x2 }}" y2="{{ spark.top_y }}" stroke="#e2e8f0" stroke-width="1" />
+        <line x1="{{ spark.axis_x1 }}" y1="{{ spark.bottom_y }}" x2="{{ spark.axis_x2 }}" y2="{{ spark.bottom_y }}" stroke="#e2e8f0" stroke-width="1" />
+        <text x="{{ spark.label_x }}" y="{{ spark.top_y + 3 }}" text-anchor="end" font-size="7" fill="#94a3b8">5</text>
+        <text x="{{ spark.label_x }}" y="{{ spark.bottom_y + 3 }}" text-anchor="end" font-size="7" fill="#94a3b8">1</text>
+
+        <!-- the trend line, in one or more segments so it does NOT cross gaps -->
+        {% for seg in spark.segments %}
+        <polyline fill="none" stroke="#6366f1" stroke-width="2"
+                  stroke-linejoin="round" stroke-linecap="round" points="{{ seg }}" />
+        {% endfor %}
+
+        <!-- recorded days (filled) -->
+        {% for dot in spark.dots %}
+        <circle cx="{{ dot.x }}" cy="{{ dot.y }}" r="2.5" fill="#6366f1">
+          <title>{{ dot.feeling }}/5</title>
+        </circle>
+        {% endfor %}
+      </svg>
+    </div>
+    {% endif %}
+
+    {% if person.recent %}
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-slate-400">
+          <th class="font-normal py-1">Date</th>
+          <th class="font-normal py-1">Feeling</th>
+          <th class="font-normal py-1">Meds</th>
+          <th class="font-normal py-1">Ate</th>
+          <th class="font-normal py-1">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for day in person.recent | reverse %}  {# newest at top #}
+        <tr class="border-t border-slate-100">
+          <td class="py-1.5 text-slate-700">{{ day.date.strftime("%a %b %-d") }}</td>
+          <td class="py-1.5">
+            {% if day.feeling is not none %}
+              <span class="inline-block min-w-[1.5rem] text-center rounded px-1
+                  {% if day.feeling >= 4 %}bg-emerald-100 text-emerald-800
+                  {% elif day.feeling == 3 %}bg-slate-100 text-slate-700
+                  {% else %}bg-amber-100 text-amber-800{% endif %}">
+                {{ day.feeling }}
+              </span>
+            {% else %}<span class="text-slate-300">—</span>{% endif %}
+          </td>
+          <td class="py-1.5">{{ '✓' if day.meds else ('—' if day.meds is none else '✗') }}</td>
+          <td class="py-1.5">{{ '✓' if day.eaten else ('—' if day.eaten is none else '✗') }}</td>
+          <td class="py-1.5 text-slate-500">{{ day.status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-sm text-slate-400">No check-ins yet in this window.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+
+{% endblock %}

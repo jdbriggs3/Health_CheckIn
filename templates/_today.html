@@ -1,0 +1,31 @@
+{# The "today" panel. It lives in its own file so TWO things can use it:
+   the full dashboard page includes it, and the htmx auto-refresh endpoint
+   (/partials/today) returns just this piece every 30 seconds. #}
+<div class="grid gap-3 sm:grid-cols-2">
+  {% for person in people %}
+  <div class="rounded-lg border p-4
+      {% if person.today_status == 'complete' %}border-emerald-200 bg-emerald-50
+      {% elif person.today_status == 'in_progress' %}border-amber-200 bg-amber-50
+      {% else %}border-slate-200 bg-white{% endif %}">
+    <div class="flex items-center justify-between">
+      <span class="font-medium text-slate-900">{{ person.name }}</span>
+      {% if person.today_status == 'complete' %}
+        <span class="text-xs font-medium text-emerald-700">checked in ✓</span>
+      {% elif person.today_status == 'in_progress' %}
+        <span class="text-xs font-medium text-amber-700">answering…</span>
+      {% else %}
+        <span class="text-xs font-medium text-slate-500">no reply yet</span>
+      {% endif %}
+    </div>
+    {% if person.today_status == 'complete' and person.recent %}
+      {% set t = person.recent[-1] %}
+      <div class="mt-2 text-sm text-slate-600">
+        Feeling {{ t.feeling }}/5 ·
+        Meds {{ '✓' if t.meds else '—' }} ·
+        Ate {{ '✓' if t.eaten else '—' }}
+      </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+<p class="mt-2 text-xs text-slate-400">Updates automatically. Last checked just now.</p>

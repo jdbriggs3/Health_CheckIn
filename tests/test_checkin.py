@@ -18,7 +18,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app import config, flow
+from app import config, dashboard, flow
 from app.models import Base, DailyCheckIn, Recipient
 
 TEST_PHONE = "+15550000000"
@@ -139,3 +139,86 @@ def test_no_alert_after_completed_checkin(session, sent):
 
     flow.check_missing_replies(session)
     assert sent == []  # nothing sent = all good
+
+
+# --- Testing the dashboard summary ------------------------------------------
+
+def test_overview_summarizes_a_completed_checkin(session, sent):
+    """After a full check-in, the dashboard overview reflects it correctly."""
+    flow.start_checkins(session)
+    flow.handle_reply(session, TEST_PHONE, "4")
+    flow.handle_reply(session, TEST_PHONE, "yes")
+    flow.handle_reply(session, TEST_PHONE, "no")
+
+    overview = dashboard.get_overview(session, days=14)
+    assert overview["days"] == 14
+    person = overview["people"][0]
+    assert person["name"] == "Test Person"
+    assert person["checked_in_today"] is True
+    assert person["today_status"] == "complete"
+    assert person["avg_feeling"] == 4.0
+    assert person["recent"][-1]["feeling"] == 4  # newest entry
+
+
+def test_overview_when_no_checkin_yet(session):
+    """With no check-ins, the person shows as 'no reply yet' and no average."""
+    overview = dashboard.get_overview(session, days=7)
+    person = overview["people"][0]
+    assert person["checked_in_today"] is False
+    assert person["today_status"] == "no reply yet"
+    assert person["avg_feeling"] is None
+    assert person["missed_days"] == 7
+    # No check-ins at all: nothing to plot and no line.
+    assert person["sparkline"]["dots"] == []
+    assert person["sparkline"]["segments"] == []
+
+
+# --- Testing the feeling-trend sparkline ------------------------------------
+
+def test_sparkline_axis_is_fixed_to_1_through_5():
+    """A 5 sits exactly on the top axis line and a 1 on the bottom, regardless
+    of the data — the vertical scale is always the full 1-5 range."""
+    from datetime import date, timedelta
+
+    window_start = date(2026, 6, 1)
+    recent = [
+        {"date": window_start, "feeling": 5},
+        {"date": window_start + timedelta(days=1), "feeling": 1},
+    ]
+    spark = dashboard.build_sparkline(recent, window_start, days=5)
+
+    dot5, dot1 = spark["dots"]
+    assert dot5["y"] == spark["top_y"]      # feeling 5 -> top of the chart
+    assert dot1["y"] == spark["bottom_y"]   # feeling 1 -> bottom of the chart
+    assert dot1["x"] > dot5["x"]            # later day is further right
+
+
+def test_sparkline_breaks_line_at_missed_days():
+    """A missed day (no check-in) splits the line rather than connecting across,
+    leaving a visible gap."""
+    from datetime import date, timedelta
+
+    window_start = date(2026, 6, 1)
+    recent = [
+        {"date": window_start, "feeling": 3},                       # day 0
+        {"date": window_start + timedelta(days=1), "feeling": 4},   # day 1
+        # day 2 missing
+        {"date": window_start + timedelta(days=3), "feeling": 4},   # day 3
+        {"date": window_start + timedelta(days=4), "feeling": 5},   # day 4
+    ]
+    spark = dashboard.build_sparkline(recent, window_start, days=5)
+
+    assert len(spark["dots"]) == 4
+    assert len(spark["segments"]) == 2      # line split into two runs by the gap
+
+
+def test_sparkline_single_point_has_no_line():
+    """A lone recorded day can't form a line segment (needs two points)."""
+    from datetime import date, timedelta
+
+    window_start = date(2026, 6, 1)
+    recent = [{"date": window_start + timedelta(days=2), "feeling": 3}]
+    spark = dashboard.build_sparkline(recent, window_start, days=5)
+
+    assert len(spark["dots"]) == 1
+    assert spark["segments"] == []

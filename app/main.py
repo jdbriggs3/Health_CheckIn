@@ -1,24 +1,33 @@
 """
-The web server (FastAPI). It exposes a few URLs ("endpoints") that make things
-happen. Run it, then trigger these endpoints to drive the check-in.
+The web server (FastAPI). It exposes the family dashboard (a web page) plus the
+endpoints that drive the SMS check-in.
 
 Endpoints:
-    GET  /              -> a quick status page (today's check-ins)
-    POST /send-checkin  -> send this morning's first question to everyone
-    POST /sms-webhook   -> receive a reply (Twilio will call this for real later)
-    POST /check-alerts  -> text the family about anyone who hasn't finished
+    GET  /               -> the family dashboard (HTML web page)
+    GET  /partials/today -> just the "today" panel (htmx auto-refresh)
+    GET  /api/status     -> the same data as JSON (handy for testing/debugging)
+    POST /send-checkin   -> send this morning's first question to everyone
+    POST /sms-webhook    -> receive a reply (Twilio will call this for real later)
+    POST /check-alerts   -> text the family about anyone who hasn't finished
 """
-
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, Request
 from fastapi.responses import JSONResponse
+from fastapi.templating import Jinja2Templates
 
 from app import config
+from app.dashboard import get_overview
 from app.database import SessionLocal, init_db
 from app.flow import check_missing_replies, handle_reply, start_checkins
 from app.models import DailyCheckIn, Recipient
 from sqlalchemy import select
+
+# Where the HTML templates live. We build the path from THIS file's location so
+# it works no matter which folder the server is started from.
+TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @asynccontextmanager
@@ -47,8 +56,30 @@ def _seed_recipients() -> None:
 
 
 @app.get("/")
-def status():
-    """A friendly peek at where today's check-ins stand."""
+def dashboard(request: Request):
+    """The family dashboard: recent history and today's status, as a web page."""
+    with SessionLocal() as session:
+        overview = get_overview(session)
+    # Jinja2Templates needs the request object; the rest is our data.
+    return templates.TemplateResponse(
+        request, "dashboard.html",
+        {"people": overview["people"], "days": overview["days"]},
+    )
+
+
+@app.get("/partials/today")
+def today_panel(request: Request):
+    """Just the 'today at a glance' panel — htmx fetches this to auto-refresh."""
+    with SessionLocal() as session:
+        overview = get_overview(session)
+    return templates.TemplateResponse(
+        request, "_today.html", {"people": overview["people"]},
+    )
+
+
+@app.get("/api/status")
+def api_status():
+    """The raw data as JSON. Handy for testing and for any future tooling."""
     with SessionLocal() as session:
         checkins = session.scalars(select(DailyCheckIn)).all()
         return {

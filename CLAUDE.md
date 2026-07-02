@@ -43,6 +43,9 @@ or give medical advice. Keep that boundary clear in everything it does.
    Captures daily signals directly from them, no internet required.
 2. **Family dashboard (later):** WE (the family) see the history and trends —
    the daily check-ins plus any visit notes. This is the web page part.
+   **Requirement: the dashboard must require a family login before real data
+   goes live.** (It holds personal health observations about two people, so it
+   cannot be publicly accessible.)
 
 Build half 1 first as the simplest thing that works. Add half 2 once that's solid.
 
