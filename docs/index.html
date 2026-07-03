@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Health Check-In — Daily Family Check-In by SMS</title>
+  <meta name="description" content="Health Check-In is a private, opt-in daily text-message check-in that helps a family stay connected with aging parents. It is a family information service, not a medical device.">
+  <style>
+    :root { --ink:#1f2933; --muted:#52606d; --line:#e4e7eb; --accent:#2b6cb0; --bg:#f7f9fb; }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; background:var(--bg); color:var(--ink);
+      font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 22px 72px; }
+    header {
+      background: #fff; border-bottom:1px solid var(--line);
+      padding: 44px 22px 34px;
+    }
+    header .wrap { padding-bottom:0; }
+    h1 { font-size: 1.9rem; margin: 0 0 6px; letter-spacing:-0.01em; }
+    .tagline { color:var(--muted); font-size:1.05rem; margin:0; }
+    h2 { font-size:1.2rem; margin: 38px 0 10px; padding-top: 10px; }
+    p { margin: 0 0 14px; }
+    ul { margin: 0 0 14px; padding-left: 22px; }
+    li { margin: 4px 0; }
+    a { color: var(--accent); }
+    .note {
+      background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+      border-radius:8px; padding:14px 18px; margin:20px 0; color:var(--muted);
+    }
+    .samples { background:#fff; border:1px solid var(--line); border-radius:10px; padding:8px 18px; margin:14px 0; }
+    .bubble { border-bottom:1px solid var(--line); padding:12px 0; }
+    .bubble:last-child { border-bottom:0; }
+    .bubble .who { font-size:0.8rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin-bottom:3px; }
+    .contact { background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin:14px 0; }
+    .contact div { margin:4px 0; }
+    footer { color:var(--muted); font-size:0.9rem; border-top:1px solid var(--line); margin-top:44px; padding-top:18px; }
+    strong { color:var(--ink); }
+    code { background:#eef1f4; padding:1px 6px; border-radius:5px; font-size:0.92em; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Health Check-In</h1>
+      <p class="tagline">A private, opt-in daily check-in by text message that helps one family stay connected with their aging parents.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <h2>What this service is</h2>
+    <p>
+      Health Check-In sends a short, friendly sequence of text messages each morning to a small number of
+      family members who have asked to receive them. Their replies help the family stay in touch and notice
+      early if someone hasn't checked in. It works entirely over ordinary SMS, so no app or internet is needed.
+    </p>
+    <div class="note">
+      <strong>This is a family information service, not a medical device.</strong> It records everyday
+      observations and highlights trends to support family conversations. It does not diagnose conditions,
+      detect emergencies, or provide medical advice.
+    </div>
+
+    <h2>Who receives messages, and how they opt in</h2>
+    <p>
+      Messages go only to a handful of consenting family members. Each recipient is enrolled by the account
+      owner <strong>after giving their express prior consent in person</strong> to receive these daily texts.
+      This is a closed, personal program: there is no public sign-up, no marketing, and phone numbers are
+      never bought, sold, shared, or added without the person's direct agreement. Any recipient can stop the
+      messages at any time (see <a href="#optout">Opt-out &amp; help</a> below).
+    </p>
+
+    <h2>What the messages look like</h2>
+    <p>The check-in asks a few gentle questions, one at a time, and closes with a thank-you:</p>
+    <div class="samples">
+      <div class="bubble">
+        <div class="who">Morning check-in</div>
+        Good morning! ☀️ How are you feeling today, on a scale of 1 to 5? (5 = great, 1 = rough)
+      </div>
+      <div class="bubble">
+        <div class="who">Follow-up</div>
+        Thanks! Have you taken your morning meds yet? (yes / no)
+      </div>
+      <div class="bubble">
+        <div class="who">Follow-up</div>
+        Got it. And have you had something to eat? (yes / no)
+      </div>
+      <div class="bubble">
+        <div class="who">Closing</div>
+        That's everything — thank you! 💛 So good to hear from you. Talk tomorrow.
+      </div>
+    </div>
+
+    <h2>How often messages are sent</h2>
+    <p>
+      Recurring, roughly one short conversation each morning (a few messages per recipient per day),
+      plus the recipient's own replies. Message frequency varies.
+    </p>
+
+    <h2 id="optout">Opt-out &amp; help</h2>
+    <ul>
+      <li>Reply <strong>STOP</strong> at any time to stop receiving messages.</li>
+      <li>Reply <strong>HELP</strong> for help, or contact us using the details below.</li>
+      <li><strong>Message and data rates may apply.</strong></li>
+    </ul>
+
+    <h2>Privacy</h2>
+    <p>
+      Information shared through this service is used only to keep participating family members informed.
+      It is <strong>never sold, rented, or shared with third parties</strong>, and mobile numbers and message
+      content are not used for marketing. No consumer information collected through the messaging program is
+      shared with third parties for their own marketing or promotional purposes.
+    </p>
+
+    <h2>Contact</h2>
+    <div class="contact">
+      <div><strong>Health Check-In</strong></div>
+      <div>Email: <a href="mailto:jdbriggs3@gmail.com">jdbriggs3@gmail.com</a></div>
+      <!-- Optional: add a mailing address line here if you listed one on the Twilio form, e.g.
+      <div>Address: 123 Example St, City, ST 00000</div>
+      -->
+    </div>
+
+    <footer>
+      Health Check-In is a private, non-commercial family service. It sends no marketing and has no public sign-up.
+    </footer>
+
+  </main>
+</body>
+</html>
