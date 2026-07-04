@@ -47,8 +47,25 @@ scripts/
   seed_sample_data.py     # fill the local db with sample data to preview the dashboard
 tests/          # automated tests (see "Running the tests" below)
 docs/
+  index.html              # PUBLIC web page (served by GitHub Pages) — see below
   changing-questions.md   # how to reword / add / remove a question
 ```
+
+### The public web page (Twilio verification)
+
+`docs/index.html` is a **public** page served by **GitHub Pages** at
+<https://jdbriggs3.github.io/Health_CheckIn/>. It exists so Twilio's toll-free
+SMS verification has a real, always-on URL describing the messaging program
+(what it is, how people opt in, sample messages, STOP/HELP, privacy, contact).
+
+- **It is public** — never put phone numbers, health data, or the recipients'
+  names on it. It only describes the program.
+- **Editing it = editing a live page.** Pages redeploys from the `dev` branch
+  `/docs` folder on every push, so a change goes live about a minute after you
+  push.
+- **Keep it matched to the Twilio form.** Twilio rejection reason *30445* is a
+  consistency check: the business name (`Health Check-In` / Deborah Briggs) and
+  email (`jdbriggs3@gmail.com`) on the form must match what the page shows.
 
 ### The endpoints (URLs the app responds to)
 
@@ -123,6 +140,8 @@ you can also click the green ▶ arrows next to each test.
 
 1. ✅ ~~The family dashboard~~ — done (recent history + "today at a glance").
 2. **Real Twilio + hosting** — send actual texts from an always-on, low-cost host.
+   *In progress:* toll-free number verification (required before Twilio will send
+   real texts). The public page it needs is live — see "The public web page" above.
 3. **Alert timing rules** — e.g. ask at 9am, alert the family if not done by 11am.
 
 Done:
