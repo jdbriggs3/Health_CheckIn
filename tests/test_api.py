@@ -14,10 +14,12 @@ conftest.py it uses a throwaway database, and we swap send_sms for a recorder.
 import pytest
 from fastapi.testclient import TestClient
 
-from app import flow
+from app import config, flow
 from app.main import app
 
-TEST_PHONE = "+15550000000"  # matches the seeded recipient in app/config.py
+# Use whatever number config seeds as the first recipient, so this test never
+# goes stale when that number changes (e.g. swapping the test phone for a real one).
+TEST_PHONE = config.RECIPIENTS[0]["phone"]
 
 
 @pytest.fixture
@@ -64,7 +66,8 @@ def test_webhook_uses_twilio_field_names(client):
     assert r1.status_code == 200
     r2 = client.post("/sms-webhook", data={"From": TEST_PHONE, "Body": "yes"})
     r3 = client.post("/sms-webhook", data={"From": TEST_PHONE, "Body": "yes"})
-    assert "COMPLETE" in r3.json()["result"]
+    r4 = client.post("/sms-webhook", data={"From": TEST_PHONE, "Body": "no"})
+    assert "COMPLETE" in r4.json()["result"]
 
     # The JSON status endpoint now shows a completed check-in with our answers.
     checkins = client.get("/api/status").json()["checkins"]

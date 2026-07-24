@@ -102,7 +102,7 @@ def get_overview(session: Session, days: int = 14) -> dict:
                     "name": "Dad",
                     "checked_in_today": True,
                     "today_status": "complete" | "in_progress" | "no reply yet",
-                    "recent": [ {date, feeling, meds, eaten, status}, ... ],  # oldest -> newest
+                    "recent": [ {date, feeling, meds, eaten, note, status}, ... ],  # oldest -> newest
                     "avg_feeling": 3.8 or None,
                     "missed_days": 2,   # days in the window with no check-in at all
                 },
@@ -134,6 +134,7 @@ def get_overview(session: Session, days: int = 14) -> dict:
                 "feeling": r.feeling,
                 "meds": r.meds,
                 "eaten": r.eaten,
+                "note": r.note,
                 "status": r.status,
             }
             for r in rows

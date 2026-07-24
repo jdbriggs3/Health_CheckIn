@@ -78,6 +78,7 @@
           <th class="font-normal py-1">Meds</th>
           <th class="font-normal py-1">Ate</th>
           <th class="font-normal py-1">Status</th>
+          <th class="font-normal py-1">Note</th>
         </tr>
       </thead>
       <tbody>
@@ -97,6 +98,9 @@
           <td class="py-1.5">{{ '✓' if day.meds else ('—' if day.meds is none else '✗') }}</td>
           <td class="py-1.5">{{ '✓' if day.eaten else ('—' if day.eaten is none else '✗') }}</td>
           <td class="py-1.5 text-slate-500">{{ day.status }}</td>
+          <td class="py-1.5 text-slate-700">
+            {% if day.note %}{{ day.note }}{% else %}<span class="text-slate-300">—</span>{% endif %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>

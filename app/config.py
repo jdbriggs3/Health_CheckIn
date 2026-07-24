@@ -1,20 +1,33 @@
 """
 Settings you'll actually want to change, all in one place.
 
-For version 1 everything lives here in plain Python. Later we can move secrets
-(like a real Twilio key) into environment variables — but not yet.
+Phone numbers are PRIVATE, so they do NOT live in this file (which gets uploaded
+to git). Instead they're read from the git-ignored .env file. This file only ever
+contains a harmless fake "+1 555..." placeholder, so your real number can never
+be exposed in the shared code.
 """
 
+import os
+
+from dotenv import load_dotenv
+
+# Load the private .env file so the phone numbers below are available. Safe to
+# call even if there's no .env — it just does nothing.
+load_dotenv()
+
 # --- Who gets the daily check-in -------------------------------------------
-# Start with ONLY your own phone so you can test the whole thing safely.
-# Add your dad and his wife here later, once it feels good.
+# Real numbers live in .env (MY_PHONE). If it's missing we fall back to a fake
+# 555 number, so this shared file never contains a real phone number.
 # Use full numbers in E.164 format: "+1" then the 10 digits, no spaces/dashes.
+# Add your dad and his wife here later, once it feels good.
+_MY_PHONE = os.environ.get("MY_PHONE", "+15550000000")
+
 RECIPIENTS = [
-    {"name": "Test (me)", "phone": "+15550000000"},
+    {"name": "Test (me)", "phone": _MY_PHONE},
 ]
 
-# Where "no reply yet" alerts go (you, the family). Same phone format.
-FAMILY_ALERT_PHONE = "+15550000000"
+# Where "no reply yet" alerts go (you, the family). Also from .env, same fallback.
+FAMILY_ALERT_PHONE = os.environ.get("FAMILY_ALERT_PHONE", _MY_PHONE)
 
 
 # --- The morning questions --------------------------------------------------
@@ -44,6 +57,18 @@ QUESTIONS = [
         "column": "eaten",
         "type": "yes_no",
         "prompt": "Got it. And have you had something to eat? (yes / no)",
+    },
+    {
+        "key": "note",
+        "column": "note",
+        "type": "free_text",
+        # Optional, in their own words. The app only RECORDS this and shows it to
+        # the family — it never interprets it or treats anything in it (like
+        # "chest pain") as a medical alert. Skipping it is a perfectly fine reply.
+        "prompt": (
+            "Last thing — anything you'd like to add about how you're "
+            "feeling? (Totally optional: a word or two, or just say \"no\".)"
+        ),
     },
 ]
 

@@ -24,6 +24,9 @@
         Meds {{ '✓' if t.meds else '—' }} ·
         Ate {{ '✓' if t.eaten else '—' }}
       </div>
+      {% if t.note %}
+      <div class="mt-1 text-sm text-slate-700">“{{ t.note }}”</div>
+      {% endif %}
     {% endif %}
   </div>
   {% endfor %}

@@ -40,10 +40,15 @@ class DailyCheckIn(Base):
     recipient_id: Mapped[int] = mapped_column(ForeignKey("recipients.id"))
     date: Mapped[date] = mapped_column(Date)
 
-    # The three answers. Start empty (None) and fill in as replies come back.
+    # The answers. Start empty (None) and fill in as replies come back.
     feeling: Mapped[int | None] = mapped_column(Integer, nullable=True)
     meds: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     eaten: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    # An optional free-text note in their own words ("toe hurts", "great day").
+    # Blank when they don't add anything. The app only stores and displays this;
+    # it never interprets it or treats it as a medical alert.
+    note: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Progress tracking for the guided sequence:
     # current_index = which question in config.QUESTIONS we're waiting on.

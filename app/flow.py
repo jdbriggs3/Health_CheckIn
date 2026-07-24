@@ -49,6 +49,15 @@ def parse_answer(qtype: str, text: str):
             return False
         return None
 
+    if qtype == "free_text":
+        # A freeform note. Almost anything is a valid answer, so this never
+        # returns None (which would trigger a "try again" nudge). If they clearly
+        # decline, store a BLANK note ("") rather than the word "no". Otherwise
+        # keep their exact words, original casing — it's a note, not a command.
+        if cleaned in {"no", "n", "nope", "nah", "nothing", "none", "skip", "na", "n/a"}:
+            return ""
+        return text.strip()
+
     return None
 
 

@@ -78,7 +78,7 @@ def test_parse_yes_no(text, expected):
 # --- Testing the full guided conversation -----------------------------------
 
 def test_full_checkin_flow(session, sent):
-    """A complete morning: send question 1, answer all three, get the closing."""
+    """A complete morning: send question 1, answer all four, get the closing."""
     flow.start_checkins(session)
     # First question went out.
     assert len(sent) == 1
@@ -87,12 +87,14 @@ def test_full_checkin_flow(session, sent):
     flow.handle_reply(session, TEST_PHONE, "4")
     flow.handle_reply(session, TEST_PHONE, "yes")
     flow.handle_reply(session, TEST_PHONE, "not yet")
+    flow.handle_reply(session, TEST_PHONE, "toe hurts a little")
 
     # The saved row has the right answers and is marked complete.
     checkin = session.query(DailyCheckIn).one()
     assert checkin.feeling == 4
     assert checkin.meds is True
     assert checkin.eaten is False
+    assert checkin.note == "toe hurts a little"
     assert checkin.status == "complete"
 
     # The warm closing message was the last thing sent.
@@ -135,6 +137,7 @@ def test_no_alert_after_completed_checkin(session, sent):
     flow.handle_reply(session, TEST_PHONE, "5")
     flow.handle_reply(session, TEST_PHONE, "yes")
     flow.handle_reply(session, TEST_PHONE, "yes")
+    flow.handle_reply(session, TEST_PHONE, "no")  # declines the optional note
     sent.clear()
 
     flow.check_missing_replies(session)
@@ -149,6 +152,7 @@ def test_overview_summarizes_a_completed_checkin(session, sent):
     flow.handle_reply(session, TEST_PHONE, "4")
     flow.handle_reply(session, TEST_PHONE, "yes")
     flow.handle_reply(session, TEST_PHONE, "no")
+    flow.handle_reply(session, TEST_PHONE, "no")  # declines the optional note
 
     overview = dashboard.get_overview(session, days=14)
     assert overview["days"] == 14
