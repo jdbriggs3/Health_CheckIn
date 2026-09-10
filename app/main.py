@@ -37,22 +37,40 @@ async def lifespan(_app: FastAPI):
     on shutdown (after 'yield'). This is FastAPI's current way to do startup
     work — here: create tables and seed recipients."""
     init_db()
-    _seed_recipients()
+    _sync_recipients()
     yield
 
 
 app = FastAPI(title="Daily Check-In", lifespan=lifespan)
 
 
-def _seed_recipients() -> None:
-    """Add recipients from config.py the first time, so the DB isn't empty."""
+def _sync_recipients() -> None:
+    """Make the database agree with the RECIPIENTS list in .env.
+
+    Runs every time the server starts, and works in BOTH directions:
+
+      * Listed in .env  -> added if new, and marked active.
+      * NOT in .env     -> marked INACTIVE, so their check-ins stop.
+
+    Removing someone never DELETES them. Their name and every past check-in stay
+    exactly where they are, because the point of stopping is usually that they've
+    opted out or died — and neither is a reason to erase a year of their history.
+    Only the daily messages stop (app/flow.py only texts active recipients).
+    """
+    wanted = {entry["phone"]: entry["name"] for entry in config.RECIPIENTS}
+
     with SessionLocal() as session:
-        for entry in config.RECIPIENTS:
-            exists = session.scalar(
-                select(Recipient).where(Recipient.phone == entry["phone"])
-            )
-            if not exists:
-                session.add(Recipient(name=entry["name"], phone=entry["phone"]))
+        existing = {p.phone: p for p in session.scalars(select(Recipient)).all()}
+
+        for phone, person in existing.items():
+            person.active = phone in wanted
+            if person.active:
+                person.name = wanted[phone]  # let .env fix a spelling change
+
+        for phone, name in wanted.items():
+            if phone not in existing:
+                session.add(Recipient(name=name, phone=phone, active=True))
+
         session.commit()
 
 

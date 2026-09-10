@@ -10,8 +10,10 @@ starts with the full picture.
 
 A daily check-in tool for my dad and his wife, ages 90 and 85, who live on their
 own about six hours away (in Boise) and both have concerning health conditions.
-They don't have internet but do use their cell phones, so the tool works through
-**text messages (SMS)** — no app to install, no internet needed.
+They don't have internet but do use their iPhones, so the tool works through
+**messages** — no app to install, nothing new to learn. (Originally planned as
+SMS via Twilio; now sent as **iMessage** from a Mac at home. See "Decisions
+made" below.)
 
 Each morning it sends a short, friendly sequence of questions:
 - How are you feeling today? (scale of 1–5)
@@ -55,13 +57,19 @@ Build half 1 first as the simplest thing that works. Add half 2 once that's soli
 
 - **FastAPI** (Week 4) — the backend server. Sends the daily messages and
   receives the replies. Same framework used in the Photo Journal final project.
-- **APIs** (Weeks 4 & 6) — the tool calls an external SMS service's API to send
-  texts, and receives incoming texts via a webhook (an API endpoint on my server).
+- **APIs** (Weeks 4 & 6) — originally: call an SMS service's API and receive
+  replies on a webhook. As built: the Mac's own Messages app is the "service" —
+  AppleScript to send, and reading Apple's message database to receive. Same
+  shape (talk to something outside your program, handle what comes back),
+  different doorway.
 - **Databases** (SQLite/SQLAlchemy, and TinyDB from Photo Journal) — store each
   day's replies (date, 1–5 number, meds Y/N, eaten Y/N) so trends can be tracked.
-- **Cloud / serverless deployment** (Weeks 7 & 8) — the app must run somewhere
-  always-on (not my laptop) to text them every morning. Serverless may fit well
-  and stay cheap, since it only "wakes up" to send or handle a message.
+- **Always-on deployment** (Weeks 7 & 8) — the app must run somewhere that stays
+  on (not my laptop) to message them every morning. The cloud/serverless options
+  from the course don't apply now that it needs a signed-in Mac, so the same
+  ideas land on a **Mac mini at home** with a `launchd` background service
+  instead: something that starts on its own, keeps running, and wakes on a
+  schedule.
 - **Full-stack web (Jinja2, TailwindCSS, htmx)** (Weeks 1–2, 5, Photo Journal) —
   for the family dashboard half, when I get there.
 
@@ -70,20 +78,36 @@ auto-summarizing visit notes) — a natural next step, not needed for version 1.
 
 ---
 
-## Decisions still to make (rough out before building)
+## Decisions made (updated 2026-09-10)
 
-- **SMS service:** Twilio is the standard choice. Need to check current pricing
-  before committing — expected to be very cheap at this scale (a few messages/day
-  to two people), roughly a few dollars/month plus a small per-message cost.
-- **Hosting:** NOT Heroku (no longer cheap). Look at current low-cost / free-tier
-  options together (e.g. Render, Railway, Fly.io, PythonAnywhere, or a serverless
-  option) — verify current terms before choosing.
-- **Who gets alerts**, and the **timing rules** (e.g. "send the questions at 9am;
-  flag the family if no reply by 11am").
+- **Messaging: iMessage, not Twilio.** Twilio was abandoned in July 2026 — the
+  toll-free verification kept getting rejected and A2P registration was far too
+  heavy for a two-person family tool. Everyone involved has an iPhone, so the
+  messages are sent and read through the **macOS Messages app** instead. Free,
+  and it arrives in the thread they already have. Sending uses AppleScript;
+  receiving reads Apple's `chat.db` read-only.
+- **Hosting: a Mac mini at home in Wenatchee**, not a cloud host. iMessage needs
+  a real signed-in Mac, so the cloud options (Railway, Render, Fly) no longer
+  apply. Acquired September 2026; setup in progress.
+- **Sending identity: her own Apple ID**, so the check-in arrives from *her*, in
+  the thread her dad already has, rather than from an unknown sender.
+- **Who receives it, and how to stop:** the list lives in the git-ignored `.env`,
+  never in this public repo. Removing someone stops their messages but keeps
+  every past check-in — because the reasons someone stops are usually opting out
+  or dying, and neither is a reason to erase their history.
+
+## Decisions still to make
+
+- **Timing rules** — e.g. "send the questions at 9am Mountain; flag the family
+  if no reply by 11am." Note their timezone is Boise (Mountain), not the Mac's.
+- **Who gets alerts** besides her.
 - **Boise setup:** very light on their end — no app to install. Mostly: confirm
-  their phones send/receive texts reliably, save the sending number so it isn't
-  mistaken for spam, and do a friendly test run with them. Someone in Boise can
-  help with this.
+  their phones send/receive reliably, make sure her contact is saved so the
+  messages look like they come from family, and do a friendly test run with
+  them. Someone in Boise can help with this.
+- **Backup** — once the mini holds the only real copy of the data.
+- **Remote access** — reaching the dashboard from away from home, via a private
+  network like Tailscale rather than opening the house to the internet.
 
 ---
 

@@ -1,9 +1,19 @@
 .idea/
-checkins.db
 server.log
 .venv/
 
-# Secrets — real Twilio keys live here and must NEVER be committed to git.
+# The check-in data itself — REAL health observations about real people. This
+# repo is PUBLIC (it serves a GitHub Pages site), so none of this may ever be
+# committed. The trailing * also covers SQLite's temporary -journal/-wal files
+# and any checkins.db.backup copy.
+checkins.db*
+*.backup
+
+# Tracks how far the iMessage reader has read. Local state, safe to delete.
+receiver_state.json
+
+# Secrets — phone numbers, names and the dashboard password live here and must
+# NEVER be committed to git.
 .env
 
 # Python's auto-generated caches (safe to ignore, regenerated automatically)

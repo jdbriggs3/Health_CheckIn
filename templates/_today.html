@@ -2,7 +2,10 @@
    the full dashboard page includes it, and the htmx auto-refresh endpoint
    (/partials/today) returns just this piece every 30 seconds. #}
 <div class="grid gap-3 sm:grid-cols-2">
-  {% for person in people %}
+  {# Only people still receiving check-ins belong here. Someone who has opted
+     out or died is not "yet to reply" — showing them would turn this panel into
+     a daily reminder of an absence. Their history stays below, in "Last N days". #}
+  {% for person in people if person.active %}
   <div class="rounded-lg border p-4
       {% if person.today_status == 'complete' %}border-emerald-200 bg-emerald-50
       {% elif person.today_status == 'in_progress' %}border-amber-200 bg-amber-50
@@ -29,6 +32,12 @@
       {% endif %}
     {% endif %}
   </div>
+  {% else %}
+  {# Jinja runs this when nobody passed the "active" filter above. #}
+  <p class="text-sm text-slate-400">
+    Nobody is currently receiving check-ins. Add someone to the RECIPIENTS line
+    in your .env file and restart.
+  </p>
   {% endfor %}
 </div>
 <p class="mt-2 text-xs text-slate-400">Updates automatically. Last checked just now.</p>

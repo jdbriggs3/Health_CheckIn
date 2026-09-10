@@ -1,10 +1,10 @@
 """
 Settings you'll actually want to change, all in one place.
 
-Phone numbers are PRIVATE, so they do NOT live in this file (which gets uploaded
-to git). Instead they're read from the git-ignored .env file. This file only ever
-contains a harmless fake "+1 555..." placeholder, so your real number can never
-be exposed in the shared code.
+Names and phone numbers are PRIVATE, so they do NOT live in this file (which
+gets uploaded to a PUBLIC git repo). Instead they're read from the git-ignored
+.env file. This file only ever contains a harmless fake "+1 555..." placeholder,
+so no real person can be exposed in the shared code.
 """
 
 import os
@@ -16,18 +16,58 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Who gets the daily check-in -------------------------------------------
-# Real numbers live in .env (MY_PHONE). If it's missing we fall back to a fake
-# 555 number, so this shared file never contains a real phone number.
-# Use full numbers in E.164 format: "+1" then the 10 digits, no spaces/dashes.
-# Add your dad and his wife here later, once it feels good.
-_MY_PHONE = os.environ.get("MY_PHONE", "+15550000000")
+# The list of people lives in .env, on ONE line, like this:
+#
+#     RECIPIENTS=Dad:+12085551234,Jan:+12085555678
+#
+# People are separated by commas; each person is "Name:Number". Use full numbers
+# in E.164 format: "+1" then the 10 digits, no spaces or dashes. (A name can
+# contain spaces and brackets, but not a comma.)
+#
+# To ADD someone, add them to that line. To STOP someone's check-ins — they've
+# opted out, or they've died — remove them from the line. Either way, restart
+# the app for it to take effect. Removing someone NEVER deletes their history:
+# see _sync_recipients() in app/main.py.
+_PLACEHOLDER_PHONE = "+15550000000"
 
-RECIPIENTS = [
-    {"name": "Test (me)", "phone": _MY_PHONE},
-]
 
-# Where "no reply yet" alerts go (you, the family). Also from .env, same fallback.
-FAMILY_ALERT_PHONE = os.environ.get("FAMILY_ALERT_PHONE", _MY_PHONE)
+def _parse_recipients(raw: str) -> list[dict]:
+    """Turn "Dad:+1208...,Jan:+1208..." into [{"name": ..., "phone": ...}, ...].
+
+    Splits each person at the LAST colon, so a name may itself contain a colon.
+    Anything malformed (no colon, or a missing half) is skipped rather than
+    crashing — a typo in .env should never stop the morning check-in entirely.
+    """
+    people = []
+    for chunk in raw.split(","):
+        name, separator, phone = chunk.strip().rpartition(":")
+        if not separator:
+            continue
+        name, phone = name.strip(), phone.strip()
+        if name and phone:
+            people.append({"name": name, "phone": phone})
+    return people
+
+
+# Prefer the RECIPIENTS line. Fall back to the older single MY_PHONE setting so
+# an existing .env keeps working, and finally to a fake number so the tests and
+# the public code never touch a real person.
+_MY_PHONE = os.environ.get("MY_PHONE", "").strip()
+_RAW_RECIPIENTS = os.environ.get("RECIPIENTS", "").strip()
+
+if _RAW_RECIPIENTS:
+    RECIPIENTS = _parse_recipients(_RAW_RECIPIENTS)
+elif _MY_PHONE:
+    RECIPIENTS = [{"name": "Test (me)", "phone": _MY_PHONE}]
+else:
+    RECIPIENTS = [{"name": "Test (me)", "phone": _PLACEHOLDER_PHONE}]
+
+# Where "no reply yet" alerts go (you, the family). Also from .env.
+FAMILY_ALERT_PHONE = (
+    os.environ.get("FAMILY_ALERT_PHONE", "").strip()
+    or _MY_PHONE
+    or _PLACEHOLDER_PHONE
+)
 
 
 # --- The morning questions --------------------------------------------------

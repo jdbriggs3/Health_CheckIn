@@ -100,8 +100,9 @@ def get_overview(session: Session, days: int = 14) -> dict:
             "people": [
                 {
                     "name": "Dad",
+                    "active": True,   # False = no longer receiving check-ins
                     "checked_in_today": True,
-                    "today_status": "complete" | "in_progress" | "no reply yet",
+                    "today_status": "complete" | "in_progress" | "no reply yet" | "inactive",
                     "recent": [ {date, feeling, meds, eaten, note, status}, ... ],  # oldest -> newest
                     "avg_feeling": 3.8 or None,
                     "missed_days": 2,   # days in the window with no check-in at all
@@ -141,7 +142,12 @@ def get_overview(session: Session, days: int = 14) -> dict:
         ]
 
         today_row = next((r for r in rows if r.date == today), None)
-        if today_row is None:
+        if not person.active:
+            # Someone no longer receiving check-ins (opted out, or died). They are
+            # NOT waiting to reply, so never describe them as missing. Their past
+            # is a record to look back on, not an open question each morning.
+            today_status = "inactive"
+        elif today_row is None:
             today_status = "no reply yet"
         else:
             today_status = today_row.status  # "in_progress" or "complete"
@@ -152,11 +158,14 @@ def get_overview(session: Session, days: int = 14) -> dict:
         people.append(
             {
                 "name": person.name,
+                "active": person.active,
                 "checked_in_today": today_row is not None and today_row.status == "complete",
                 "today_status": today_status,
                 "recent": recent,
                 "avg_feeling": avg_feeling,
-                "missed_days": days - len(rows),
+                # Days without a check-in only mean something for someone we're
+                # actually still texting; for anyone else it would just climb forever.
+                "missed_days": (days - len(rows)) if person.active else 0,
                 "sparkline": build_sparkline(recent, window_start, days),
             }
         )
